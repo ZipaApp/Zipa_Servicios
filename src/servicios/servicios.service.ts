@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Vacunacion, VacunacionDocument } from './schemas/vacunacion.schema';
@@ -21,7 +21,8 @@ export class ServiciosService {
       case 'paseo': return this.paseoModel;
       case 'bano': return this.banoModel;
       case 'corteunas': return this.corteUnasModel;
-      default: throw new Error('Tipo de servicio no válido');
+      default:
+        throw new BadRequestException(`Tipo de servicio no válido: ${type}`);
     }
   }
 
@@ -30,20 +31,30 @@ export class ServiciosService {
   }
 
   async findOne(type: string, id: string) {
-    return this.getModel(type).findById(id).exec();
+    const result = await this.getModel(type).findById(id).exec();
+    if (!result) throw new NotFoundException(`${type} con ID ${id} no encontrado`);
+    return result;
   }
 
   async create(type: string, data: any) {
-    const doc = new (this.getModel(type))(data);
+    const model = this.getModel(type);
+    const doc = new model(data);
     return doc.save();
   }
 
   async update(type: string, id: string, data: any) {
-    return this.getModel(type).findByIdAndUpdate(id, data, { new: true }).exec();
+    const result = await this.getModel(type)
+      .findByIdAndUpdate(id, data, { new: true })
+      .exec();
+
+    if (!result) throw new NotFoundException(`${type} con ID ${id} no encontrado`);
+    return result;
   }
 
   async remove(type: string, id: string) {
-    return this.getModel(type).findByIdAndDelete(id).exec();
+    const result = await this.getModel(type).findByIdAndDelete(id).exec();
+    if (!result) throw new NotFoundException(`${type} con ID ${id} no encontrado`);
+    return { message: `${type} con ID ${id} eliminado correctamente` };
   }
 }
 

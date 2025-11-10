@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ServiciosService } from './servicios.service';
+import { CreateServicioDto } from './dto/create-servicio.dto';
 
 @Controller('servicios/:type')
 export class ServiciosController {
@@ -16,12 +17,14 @@ export class ServiciosController {
   }
 
   @Post()
-  create(@Param('type') type: string, @Body() data: any) {
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  create(@Param('type') type: string, @Body() data: CreateServicioDto) {
     return this.serviciosService.create(type, data);
   }
 
   @Put(':id')
-  update(@Param('type') type: string, @Param('id') id: string, @Body() data: any) {
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  update(@Param('type') type: string, @Param('id') id: string, @Body() data: CreateServicioDto) {
     return this.serviciosService.update(type, id, data);
   }
 
